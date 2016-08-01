@@ -486,7 +486,7 @@ class CaptionScreen {
     insertChar(char) {
 
         // Per the CEA-608 spec, a PAC command precedes each row of text
-        // in all caption styles. Therefore, we wait for a PACto set the row
+        // in all caption styles. Therefore, we wait for a PAC to set the row
         // before adding characters to the buffer.
         // See the ANSI/CTA standard Section B.8 for more detail
 
