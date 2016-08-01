@@ -152,6 +152,9 @@ var getCharForByte = function(byte) {
 
 var NR_ROWS = 15,
     NR_COLS = 32;
+
+var ROW_NOT_SET = -1;
+
 // Tables to look up row from PAC data
 var rowsLowCh1 = {0x11 : 1, 0x12 : 3, 0x15 : 5, 0x16 : 7, 0x17 : 9, 0x10 : 11, 0x13 : 12, 0x14 : 14};
 var rowsHighCh1 = {0x11 : 2, 0x12 : 4, 0x15 : 6, 0x16 : 8, 0x17 : 10, 0x13 : 13, 0x14 : 15};
@@ -361,6 +364,7 @@ class Row {
     }
 
     insertChar(byte) {
+        
         if (byte >= 0x90) { //Extended char
             this.backSpace();
         }
@@ -426,7 +430,7 @@ class CaptionScreen {
         for (var i = 0 ; i <  NR_ROWS; i++) {
             this.rows.push(new Row()); // Note that we use zero-based numbering (0-14)
         }
-        this.currRow = NR_ROWS - 1;
+        this.currRow = ROW_NOT_SET;
         this.nrRollUpRows = null;
         this.reset();
     }
@@ -435,7 +439,7 @@ class CaptionScreen {
         for (var i = 0 ; i < NR_ROWS ; i++) {
             this.rows[i].clear();
         }
-        this.currRow = NR_ROWS - 1;
+        this.currRow = ROW_NOT_SET;
     }
 
     equals(other) {
@@ -480,6 +484,17 @@ class CaptionScreen {
      * Insert a character (without styling) in the current row.
      */
     insertChar(char) {
+
+        // Per the CEA-608 spec, a PAC command precedes each row of text
+        // in all caption styles. Therefore, we wait for a PACto set the row
+        // before adding characters to the buffer.
+        // See the ANSI/CTA standard Section B.8 for more detail
+
+        if (this.currRow === ROW_NOT_SET) {
+            logger.log('INFO', 'No row has been set. Ignoring characters.');
+            return;
+        }
+
         var row = this.rows[this.currRow];
         row.insertChar(char);
     }
